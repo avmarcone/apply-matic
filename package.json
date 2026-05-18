@@ -1,0 +1,36 @@
+{
+  "name": "apply-matic",
+  "version": "1.0.0",
+  "description": "apply-matic - tool to expedite applications",
+  "main": "dist/index.js",
+  "bin": {
+    "applymatic": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/avmarcone/apply-matic.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/avmarcone/apply-matic/issues"
+  },
+  "homepage": "https://github.com/avmarcone/apply-matic#readme",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
+    "csv-parse": "^6.2.1",
+    "dotenv": "^17.4.2",
+    "playwright": "^1.60.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}
