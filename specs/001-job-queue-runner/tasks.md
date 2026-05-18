@@ -23,10 +23,10 @@ description: "Task list for 001-job-queue-runner"
 
 **Purpose**: Install missing dependencies and establish test infrastructure.
 
-- [ ] T001 Install missing runtime dependencies: `npm install zod csv-stringify`
-- [ ] T002 Install missing dev dependencies: `npm install --save-dev vitest @vitest/coverage-v8`
-- [ ] T003 Add `test` and `coverage` scripts to `package.json`: `"test": "vitest run", "coverage": "vitest run --coverage"`
-- [ ] T004 Create `src/types.ts` with `Job`, `JobStatus`, `Profile`, and `RunResult` TypeScript types per `data-model.md`
+- [x] T001 Install missing runtime dependencies: `npm install zod csv-stringify`
+- [x] T002 Install missing dev dependencies: `npm install --save-dev vitest @vitest/coverage-v8`
+- [x] T003 Add `test` and `coverage` scripts to `package.json`: `"test": "vitest run", "coverage": "vitest run --coverage"`
+- [x] T004 Create `src/types.ts` with `Job`, `JobStatus`, `Profile`, and `RunResult` TypeScript types per `data-model.md`
 
 ---
 
@@ -36,10 +36,10 @@ description: "Task list for 001-job-queue-runner"
 
 ⚠️ **CRITICAL**: No user story work begins until this phase is complete.
 
-- [ ] T005 [P] Create `src/profile.ts` — export `loadProfile(path: string): Profile` that reads and JSON-parses the file, then validates with the Zod `ProfileSchema`; throw with field-level error messages on failure; add JSDoc
-- [ ] T006 [P] Create `src/queue.ts` — export `readQueue(path: string): Job[]` that reads and parses `jobs.csv` using `csv-parse/sync`; throw with a clear error if file is missing or columns are wrong; add JSDoc
-- [ ] T007 Add `writeQueue(path: string, jobs: Job[]): void` to `src/queue.ts` — serialises updated job array back to `jobs.csv` using `csv-stringify/sync`; overwrites file in place; add JSDoc
-- [ ] T008 Add `filterPending(jobs: Job[]): Job[]` to `src/queue.ts` — returns only jobs with status `pending`; add JSDoc
+- [x] T005 [P] Create `src/profile.ts` — export `loadProfile(path: string): Profile` that reads and JSON-parses the file, then validates with the Zod `ProfileSchema`; throw with field-level error messages on failure; add JSDoc
+- [x] T006 [P] Create `src/queue.ts` — export `readQueue(path: string): Job[]` that reads and parses `jobs.csv` using `csv-parse/sync`; throw with a clear error if file is missing or columns are wrong; add JSDoc
+- [x] T007 Add `writeQueue(path: string, jobs: Job[]): void` to `src/queue.ts` — serialises updated job array back to `jobs.csv` using `csv-stringify/sync`; overwrites file in place; add JSDoc
+- [x] T008 Add `filterPending(jobs: Job[]): Job[]` to `src/queue.ts` — returns only jobs with status `pending`; add JSDoc
 
 **Checkpoint**: `loadProfile`, `readQueue`, `writeQueue`, and `filterPending` are implemented and individually callable.
 
@@ -55,16 +55,16 @@ and a valid `profile.json`. Confirm only the pending job is processed and its st
 
 ### Unit Tests for User Story 1
 
-- [ ] T009 [P] [US1] Create `tests/unit/queue.test.ts` — test `readQueue` happy path with a valid CSV string; test that a missing file throws with an actionable message; test that `filterPending` returns only `pending` rows and ignores `applied`/`skipped`/`review-needed`
-- [ ] T010 [P] [US1] Create `tests/unit/profile.test.ts` — test `loadProfile` happy path with a valid profile object; test that a missing file throws; test that an invalid email throws with a field-level error; test that a missing required field throws naming that field
+- [x] T009 [P] [US1] Create `tests/unit/queue.test.ts` — test `readQueue` happy path with a valid CSV string; test that a missing file throws with an actionable message; test that `filterPending` returns only `pending` rows and ignores `applied`/`skipped`/`review-needed`
+- [x] T010 [P] [US1] Create `tests/unit/profile.test.ts` — test `loadProfile` happy path with a valid profile object; test that a missing file throws; test that an invalid email throws with a field-level error; test that a missing required field throws naming that field
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Create `src/index.ts` — load `.env` via `dotenv/config`; call `loadProfile('./profile.json')` and print "Loading profile... OK"; call `readQueue('./jobs.csv')` and print pending/applied/skipped counts; iterate `filterPending(jobs)` sequentially, delegating each to a stub `processJob` function; add JSDoc to all exports
-- [ ] T012 [US1] Add `processJob(job: Job, profile: Profile): Promise<RunResult>` stub to `src/index.ts` — for now, print the job company and role, then call `promptReview()` and return the result; this will be replaced by real form filling in spec 002
-- [ ] T013 [US1] Add `promptReview(job: Job): Promise<'applied' | 'review-needed'>` to `src/index.ts` — uses `readline` to display the review prompt from `contracts/cli.md`; accepts `y`, `n`, or `q`; `q` writes `review-needed` and exits the process; add JSDoc
-- [ ] T014 [US1] Add status write-back to the orchestration loop in `src/index.ts` — after `processJob` resolves, call `writeQueue` with the updated job status; print progress per `contracts/cli.md` stdout format
-- [ ] T015 [US1] Add run summary to `src/index.ts` — after all jobs are processed, print "Run complete. Applied: N | Review needed: N | Errors: N"
+- [x] T011 [US1] Create `src/index.ts` — load `.env` via `dotenv/config`; call `loadProfile('./profile.json')` and print "Loading profile... OK"; call `readQueue('./jobs.csv')` and print pending/applied/skipped counts; iterate `filterPending(jobs)` sequentially, delegating each to a stub `processJob` function; add JSDoc to all exports
+- [x] T012 [US1] Add `processJob(job: Job, profile: Profile): Promise<RunResult>` stub to `src/index.ts` — for now, print the job company and role, then call `promptReview()` and return the result; this will be replaced by real form filling in spec 002
+- [x] T013 [US1] Add `promptReview(job: Job): Promise<'applied' | 'review-needed'>` to `src/index.ts` — uses `readline` to display the review prompt from `contracts/cli.md`; accepts `y`, `n`, or `q`; `q` writes `review-needed` and exits the process; add JSDoc
+- [x] T014 [US1] Add status write-back to the orchestration loop in `src/index.ts` — after `processJob` resolves, call `writeQueue` with the updated job status; print progress per `contracts/cli.md` stdout format
+- [x] T015 [US1] Add run summary to `src/index.ts` — after all jobs are processed, print "Run complete. Applied: N | Review needed: N | Errors: N"
 
 **Checkpoint**: `npm run dev` processes a pending job end-to-end (stub form fill → review prompt → status written to CSV).
 
@@ -81,13 +81,13 @@ browser window opens in either case.
 
 ### Unit Tests for User Story 2
 
-- [ ] T016 [P] [US2] Extend `tests/unit/profile.test.ts` — test that a profile with missing `resumeFilePath` throws naming that field; test that a non-numeric `yearsOfExperience` throws a type error; test that a non-existent `resumeFilePath` throws a file-not-found error
+- [x] T016 [P] [US2] Extend `tests/unit/profile.test.ts` — test that a profile with missing `resumeFilePath` throws naming that field; test that a non-numeric `yearsOfExperience` throws a type error; test that a non-existent `resumeFilePath` throws a file-not-found error
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Add `resumeFilePath` existence check to `loadProfile` in `src/profile.ts` — after Zod validation passes, verify the file at `resumeFilePath` exists on disk using `fs.existsSync`; throw with a clear message if not found
-- [ ] T018 [US2] Add startup error handling to `src/index.ts` — wrap `loadProfile` and `readQueue` calls in a try/catch; print errors to stderr in the format from `contracts/cli.md`; exit with code 1 on any startup failure before processing begins
-- [ ] T019 [US2] Add per-job error handling to the orchestration loop in `src/index.ts` — wrap each `processJob` call in a try/catch; on unexpected error write `review-needed` via `writeQueue`, print the error to stderr, and continue to the next pending job (FR-009); include error count in the run summary
+- [x] T017 [US2] Add `resumeFilePath` existence check to `loadProfile` in `src/profile.ts` — after Zod validation passes, verify the file at `resumeFilePath` exists on disk using `fs.existsSync`; throw with a clear message if not found
+- [x] T018 [US2] Add startup error handling to `src/index.ts` — wrap `loadProfile` and `readQueue` calls in a try/catch; print errors to stderr in the format from `contracts/cli.md`; exit with code 1 on any startup failure before processing begins
+- [x] T019 [US2] Add per-job error handling to the orchestration loop in `src/index.ts` — wrap each `processJob` call in a try/catch; on unexpected error write `review-needed` via `writeQueue`, print the error to stderr, and continue to the next pending job (FR-009); include error count in the run summary
 
 **Checkpoint**: `applymatic` exits with code 1 and a specific error on any profile or queue problem — no browser opens. Unexpected mid-run errors write `review-needed` and continue rather than crashing.
 
@@ -95,11 +95,11 @@ browser window opens in either case.
 
 ## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T020 [P] Verify all exported functions in `src/types.ts`, `src/queue.ts`, `src/profile.ts`, and `src/index.ts` have complete JSDoc comments (purpose, `@param`, `@returns`)
-- [ ] T021 [P] Run `npm run build` — resolve all TypeScript strict-mode errors; confirm `dist/index.js` is produced
-- [ ] T022 Run `npm test` — confirm all unit tests pass; fix any failures
-- [ ] T023 Run the quickstart validation steps in `specs/001-job-queue-runner/quickstart.md` end-to-end; confirm all checkboxes pass
-- [ ] T024 [P] Remove any unused imports, dead code, or commented-out blocks from all `src/` files per constitution Principle I
+- [x] T020 [P] Verify all exported functions in `src/types.ts`, `src/queue.ts`, `src/profile.ts`, and `src/index.ts` have complete JSDoc comments (purpose, `@param`, `@returns`)
+- [x] T021 [P] Run `npm run build` — resolve all TypeScript strict-mode errors; confirm `dist/index.js` is produced
+- [x] T022 Run `npm test` — confirm all unit tests pass; fix any failures
+- [x] T023 Run the quickstart validation steps in `specs/001-job-queue-runner/quickstart.md` end-to-end; confirm all checkboxes pass
+- [x] T024 [P] Remove any unused imports, dead code, or commented-out blocks from all `src/` files per constitution Principle I
 
 ---
 
