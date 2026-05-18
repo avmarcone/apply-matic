@@ -91,6 +91,9 @@ before any browser opens.
 - **FR-007**: The tool MUST process jobs sequentially — no parallel browser sessions in v1.
 - **FR-008**: The tool MUST display progress to the user as each job is processed (e.g.,
   "Processing job 2 of 5: Acme Corp — Senior Engineer").
+- **FR-009**: If an unexpected error occurs during job processing (e.g., browser crash,
+  network timeout), the tool MUST write `review-needed` to that job's status, log the
+  error message to stderr, and continue processing the next pending job.
 
 ### Key Entities
 
@@ -112,6 +115,14 @@ before any browser opens.
 - **SC-005**: The tool starts and reaches the first job within 3 seconds of the user
   running `applymatic`.
 
+## Clarifications
+
+### Session 2026-05-18
+
+- Q: What should happen to a job's status when an unexpected error occurs mid-processing? → A: Write `review-needed`, log the error to stderr, continue to next job.
+- Q: Should the tool write a debug log file for troubleshooting? → A: stdout/stderr only — no log file in v1.
+- Q: Should the tool deduplicate jobs by URL before processing? → A: No deduplication — process every `pending` row regardless of URL.
+
 ## Assumptions
 
 - `jobs.csv` and `profile.json` live in the working directory where the user runs
@@ -120,5 +131,9 @@ before any browser opens.
 - Internet connectivity is assumed to be available.
 - A single user runs the tool on their local machine; no multi-user or concurrent
   execution scenarios are in scope for v1.
+- No log file is written in v1 — all output goes to stdout (progress) and stderr
+  (errors) only.
+- No deduplication of job URLs — every `pending` row is processed as-is. Duplicate
+  rows are the user's responsibility to manage.
 - The form filler and answer generator are treated as injected dependencies by this
   orchestrator — their internal behavior is out of scope for this spec.
