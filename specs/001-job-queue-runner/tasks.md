@@ -87,18 +87,19 @@ browser window opens in either case.
 
 - [ ] T017 [US2] Add `resumeFilePath` existence check to `loadProfile` in `src/profile.ts` — after Zod validation passes, verify the file at `resumeFilePath` exists on disk using `fs.existsSync`; throw with a clear message if not found
 - [ ] T018 [US2] Add startup error handling to `src/index.ts` — wrap `loadProfile` and `readQueue` calls in a try/catch; print errors to stderr in the format from `contracts/cli.md`; exit with code 1 on any startup failure before processing begins
+- [ ] T019 [US2] Add per-job error handling to the orchestration loop in `src/index.ts` — wrap each `processJob` call in a try/catch; on unexpected error write `review-needed` via `writeQueue`, print the error to stderr, and continue to the next pending job (FR-009); include error count in the run summary
 
-**Checkpoint**: `applymatic` exits with code 1 and a specific error on any profile or queue problem — no browser opens.
+**Checkpoint**: `applymatic` exits with code 1 and a specific error on any profile or queue problem — no browser opens. Unexpected mid-run errors write `review-needed` and continue rather than crashing.
 
 ---
 
 ## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T019 [P] Verify all exported functions in `src/types.ts`, `src/queue.ts`, `src/profile.ts`, and `src/index.ts` have complete JSDoc comments (purpose, `@param`, `@returns`)
-- [ ] T020 [P] Run `npm run build` — resolve all TypeScript strict-mode errors; confirm `dist/index.js` is produced
-- [ ] T021 Run `npm test` — confirm all unit tests pass; fix any failures
-- [ ] T022 Run the quickstart validation steps in `specs/001-job-queue-runner/quickstart.md` end-to-end; confirm all checkboxes pass
-- [ ] T023 [P] Remove any unused imports, dead code, or commented-out blocks from all `src/` files per constitution Principle I
+- [ ] T020 [P] Verify all exported functions in `src/types.ts`, `src/queue.ts`, `src/profile.ts`, and `src/index.ts` have complete JSDoc comments (purpose, `@param`, `@returns`)
+- [ ] T021 [P] Run `npm run build` — resolve all TypeScript strict-mode errors; confirm `dist/index.js` is produced
+- [ ] T022 Run `npm test` — confirm all unit tests pass; fix any failures
+- [ ] T023 Run the quickstart validation steps in `specs/001-job-queue-runner/quickstart.md` end-to-end; confirm all checkboxes pass
+- [ ] T024 [P] Remove any unused imports, dead code, or commented-out blocks from all `src/` files per constitution Principle I
 
 ---
 
