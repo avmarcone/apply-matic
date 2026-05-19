@@ -8,140 +8,165 @@ description: "Task list for 002-greenhouse-form-filler"
 
 **Prerequisites**: plan.md ✅ | spec.md ✅ | research.md ✅ | data-model.md ✅ | contracts/greenhouse.md ✅
 
-**Tests**: Unit tests for selector matching and field-mapping logic (Playwright integration tests require a live page — out of scope for v1).
+**Organization**: Tasks grouped by user story for independent implementation and testing.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (US1, US2, US3)
 
 ---
 
-## Phase 1: Setup
+## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Extend shared types and create new source files.
+**Purpose**: Create the greenhouse module skeleton so all story phases can work independently.
 
-- [x] T001 Extend `src/types.ts` — add `JobContext`, `OpenEndedQuestion`, and `FillResult` interfaces per `data-model.md`
-- [x] T002 Create `src/selectors.ts` — export `STANDARD_FIELD_SELECTORS` (selector strings per field) and `OPEN_ENDED_LABEL_EXCLUSIONS` (label substrings to exclude from open-ended detection) per `research.md`
-
----
-
-## Phase 2: Foundational
-
-**Purpose**: Core field-matching utilities used by all user stories.
-
-- [x] T003 [P] Create `src/greenhouse.ts` — export skeleton with `fillForm(job, profile): Promise<FillResult>` and `closeBrowser(page): Promise<void>`; stub both functions with TODOs; add JSDoc per contract
-- [x] T004 [P] Add `isOpenEndedQuestion(labelText: string): boolean` helper to `src/greenhouse.ts` — returns true if `labelText` does not match any entry in `OPEN_ENDED_LABEL_EXCLUSIONS` (case-insensitive); add JSDoc
-- [x] T005 [P] Add `extractJobDescription(page: Page): Promise<string>` helper to `src/greenhouse.ts` — tries selectors `#content`, `.job-description`, `[data-job-description]` in order; returns empty string on failure; add JSDoc
-
-**Checkpoint**: `isOpenEndedQuestion` and `extractJobDescription` are independently callable and testable.
+- [ ] T001 Create `src/greenhouse/` directory and empty module files: `types.ts`, `requiredChecker.ts`, `fieldDetector.ts`, `questionCollector.ts`, `fillForm.ts`
+- [ ] T002 [P] Create `tests/unit/` directory with placeholder files: `requiredChecker.test.ts`, `fieldDetector.test.ts`, `questionCollector.test.ts`
 
 ---
 
-## Phase 3: User Story 1 — Fill standard fields (P1) 🎯 MVP
+## Phase 2: Foundational (Blocking Prerequisites)
 
-**Goal**: `fillForm` opens the Greenhouse URL and fills name, email, phone, LinkedIn,
-work auth, education, experience, and resume from `profile.json`.
+**Purpose**: Shared types and Playwright browser setup that all user story phases depend on.
 
-**Independent Test**: Call `fillForm` with a real Greenhouse URL and profile. Confirm
-all standard fields are populated and `filledFields` lists each one. Confirm missing
-fields appear in `skippedFields` without error.
+**⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-### Unit Tests for User Story 1
+- [ ] T003 Define `OpenEndedQuestion`, `JobContext`, and `FillResult` types in `src/greenhouse/types.ts` (per data-model.md)
+- [ ] T004 Verify Playwright is installed and confirm `import { chromium } from 'playwright'` resolves without error in `src/greenhouse/fillForm.ts`
 
-- [x] T006 [P] [US1] Create `tests/unit/greenhouse.test.ts` — test `isOpenEndedQuestion` returns false for all standard label patterns (`email`, `linkedin`, `phone`, etc.); test it returns true for `"Why do you want to work here?"`; test case-insensitivity
+**Checkpoint**: Types defined, Playwright import resolves — user story phases can now begin.
+
+---
+
+## Phase 3: User Story 1 — Fill Required Greenhouse Fields (Priority: P1) 🎯 MVP
+
+**Goal**: The tool opens a Greenhouse URL and fills all required standard fields (first
+name, last name, email, phone, resume) from `profile.json` using a 5-strategy detection
+cascade. Optional fields are left untouched.
+
+**Independent Test**: Run `npm run dev` against the Garner Health URL. Confirm first name,
+last name, email, phone, and resume are populated; confirm LinkedIn and optional fields
+are left blank; confirm no crash when optional fields are absent.
 
 ### Implementation for User Story 1
 
-- [x] T007 [US1] Implement standard field filling in `fillForm` in `src/greenhouse.ts`:
-  launch headed Chromium; navigate to `job.url` with 30s timeout; for each standard
-  field in `STANDARD_FIELD_SELECTORS`, try selector → fill from profile value; add
-  to `filledFields` on success, `skippedFields` if not found; use `setInputFiles` for
-  resume upload
-- [x] T008 [US1] Add label-text fallback to `fillForm` — for fields not found by
-  selector, scan `<label>` elements for case-insensitive matches (linkedin, work
-  authorization, education, experience) and fill their associated inputs
+- [ ] T005 [US1] Implement `isRequired(page, locator)` in `src/greenhouse/requiredChecker.ts` — checks HTML `required` attr, asterisk in associated label text, and required CSS class (`required`, `field--required`)
+- [ ] T006 [P] [US1] Write unit tests for `requiredChecker` covering: element with `required` attr, label with `*`, label without `*`, CSS class present, all absent — in `tests/unit/requiredChecker.test.ts`
+- [ ] T007 [US1] Implement `detectField(page, fieldDef)` in `src/greenhouse/fieldDetector.ts` — tries strategies in order: (1) `name` attr, (2) `aria-label`, (3) label text, (4) placeholder, (5) Greenhouse CSS; returns first matching `Locator` or `null` (use selector lists from research.md)
+- [ ] T008 [P] [US1] Write unit tests for `fieldDetector` covering: field found on strategy 1, field found only on strategy 3, field not found on any strategy — in `tests/unit/fieldDetector.test.ts` (use `page.setContent` with mock HTML)
+- [ ] T009 [US1] Implement `fillRequiredFields(page, profile)` in `src/greenhouse/fillForm.ts` — iterates required field definitions, runs `detectField` + `isRequired` per field, fills matched required fields from profile, appends undetected fields to `skippedFields[]`; uses `setInputFiles` for resume
+- [ ] T010 [US1] Wire `fillRequiredFields` into the `fillForm(job, profile)` export in `src/greenhouse/fillForm.ts` — launches headed Chromium, navigates to `job.url`, calls `fillRequiredFields`, returns partial `FillResult`
 
-**Checkpoint**: Standard fields are filled on a real Greenhouse posting; skipped fields
-are logged, not thrown.
+**Checkpoint**: Required fields fill correctly; optional fields untouched; no crash on missing fields.
 
 ---
 
-## Phase 4: User Story 2 — Detect open-ended questions (P1)
+## Phase 4: User Story 2 — Identify Open-Ended Questions (Priority: P1)
 
-**Goal**: After standard fields are filled, `fillForm` scans the form for unfilled
-textareas and text inputs whose labels are not in the exclusion list, and returns them
-as `OpenEndedQuestion[]`.
+**Goal**: After required fields are filled, the tool scans the form for open-ended textarea
+and text inputs that are not standard fields, collects them with job context, and includes
+them in `FillResult`.
 
-**Independent Test**: Run `fillForm` against a Greenhouse posting with 2 open-ended
-questions. Confirm `openEndedQuestions` has length 2 with correct `questionText` and
-`fieldSelector` for each.
-
-### Unit Tests for User Story 2
-
-- [x] T009 [P] [US2] Extend `tests/unit/greenhouse.test.ts` — test `extractJobDescription` returns empty string when no matching selector is found (mock page); test `isOpenEndedQuestion` edge cases (empty string, whitespace-only label)
+**Independent Test**: Run against a Greenhouse posting with 1–2 open-ended questions.
+Confirm each question appears in `FillResult.openEndedQuestions` with its full label text
+and the correct `JobContext`. Confirm standard field labels are excluded.
 
 ### Implementation for User Story 2
 
-- [x] T010 [US2] Implement open-ended question detection in `fillForm` in `src/greenhouse.ts` — after standard field filling, query all `textarea` and `input[type="text"]` elements; for each, get the associated label text; if `isOpenEndedQuestion(label)` is true, add an `OpenEndedQuestion` to the result with `questionText`, a unique `fieldSelector`, and `JobContext`
-- [x] T011 [US2] Call `extractJobDescription` inside `fillForm` and attach the result to each `OpenEndedQuestion`'s `context.jobDescription`
+- [ ] T011 [US2] Implement `collectOpenEndedQuestions(page, context)` in `src/greenhouse/questionCollector.ts` — finds all `<textarea>` and `<input type="text">` elements, resolves each associated label, excludes labels matching standard-field patterns (see research.md Decision 2), returns `OpenEndedQuestion[]`
+- [ ] T012 [P] [US2] Write unit tests for `questionCollector` covering: textarea with open-ended label collected, textarea with standard-field label excluded, multiple questions returned, no textareas returns empty array — in `tests/unit/questionCollector.test.ts`
+- [ ] T013 [US2] Implement `scrapeJobDescription(page)` in `src/greenhouse/fillForm.ts` — tries selectors `#content`, `.job-description`, `[data-job-description]` in order; returns text content or empty string on failure
+- [ ] T014 [US2] Integrate `collectOpenEndedQuestions` and `scrapeJobDescription` into `fillForm(job, profile)` — call after required fields are filled; populate `FillResult.openEndedQuestions` with full `JobContext`
 
-**Checkpoint**: `openEndedQuestions` array is populated correctly; questions without
-matching standard labels are included; standard fields are excluded.
+**Checkpoint**: Open-ended questions collected with context; standard fields excluded; no crash on zero questions.
 
 ---
 
-## Phase 5: User Story 3 — Keep browser open for review (P1)
+## Phase 5: User Story 3 — Human Review Pause (Priority: P1)
 
-**Goal**: `fillForm` returns the live Playwright `Page` object to the orchestrator.
-The orchestrator uses it for answer injection (spec 003) and then calls `closeBrowser`
-after the user's review decision.
+**Goal**: After all fields are filled and questions collected, the browser stays open and
+the terminal prompts the user to review. Confirming marks the job `applied`; declining
+marks it `review-needed`. The form is never auto-submitted.
 
-**Independent Test**: After `fillForm` returns, confirm the browser window remains
-open and interactive. Call `closeBrowser(result.page)` and confirm it closes cleanly.
+**Independent Test**: Run end-to-end on a Greenhouse posting. Confirm the browser window
+remains interactive after filling. Confirm terminal shows the review prompt. Confirm `y`
+updates `jobs.csv` to `applied`, `n` updates to `review-needed`, and the browser closes.
 
 ### Implementation for User Story 3
 
-- [x] T012 [US3] Ensure `fillForm` returns `result.page` (the live Playwright Page) — browser context MUST NOT be closed inside `fillForm`
-- [x] T013 [US3] Implement `closeBrowser(page)` in `src/greenhouse.ts` — closes the browser context associated with the page; catches and swallows errors if already closed; add JSDoc
-- [x] T014 [US3] Update `src/index.ts` — replace the stub `processJob` with a real implementation that calls `fillForm(job, profile)`, then calls the answer generator for each open-ended question (stub for now — spec 003), then calls `promptReview`, then calls `closeBrowser`
+- [ ] T015 [US3] Add a `reviewAndConfirm(fillResult, job)` function in `src/index.ts` (or `src/cli/review.ts`) — prints filled fields and open-ended questions to terminal, prompts `[y]es / [n]o / [q]uit`, waits for user input; does NOT click submit under any condition
+- [ ] T016 [US3] Implement `updateJobStatus(jobsPath, jobUrl, status)` in `src/jobs.ts` — writes `applied` or `review-needed` to the matching row in `jobs.csv`
+- [ ] T017 [US3] Integrate review flow into main runner in `src/index.ts` — call `fillForm`, then `reviewAndConfirm`; on confirm write `applied`, on decline write `review-needed`; call `closeBrowser(page)` in both cases
 
-**Checkpoint**: End-to-end run opens browser, fills fields, pauses for review, closes
-browser after user input.
+**Checkpoint**: Full end-to-end flow works; browser never auto-submits; job status updated correctly.
 
 ---
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [x] T015 [P] Verify all exported functions in `src/greenhouse.ts` and `src/selectors.ts` have complete JSDoc (purpose, `@param`, `@returns`)
-- [x] T016 Run `npm test` — confirm all unit tests pass including new greenhouse tests
-- [x] T017 [P] Run `npm run build` — confirm zero TypeScript errors
-- [x] T018 Run quickstart validation in `specs/002-greenhouse-form-filler/quickstart.md` against a real Greenhouse URL
-- [x] T019 [P] Remove any dead code or commented-out blocks from `src/greenhouse.ts` and `src/selectors.ts`
+- [ ] T018 [P] Add JSDoc to all exported functions in `src/greenhouse/` (fillForm, detectField, isRequired, collectOpenEndedQuestions, closeBrowser) per constitution Principle II
+- [ ] T019 [P] Add error handling in `fillForm.ts` for page load timeout (>30s): catch error, call `closeBrowser`, return error to caller so orchestrator marks job `review-needed`
+- [ ] T020 Run quickstart.md verification checklist manually against the Garner Health Greenhouse URL — confirm all checkboxes pass
 
 ---
 
 ## Dependencies & Execution Order
 
-- **Phase 1**: No dependencies — start immediately
-- **Phase 2**: Depends on Phase 1 (needs types from T001, selectors from T002)
-- **Phase 3**: Depends on Phase 2
-- **Phase 4**: Depends on Phase 3 (detection runs after standard field filling)
-- **Phase 5**: Depends on Phase 3 + 4 (page must be filled before returning)
-- **Phase 6**: Depends on all story phases
+### Phase Dependencies
 
-### Parallel opportunities
+- **Setup (Phase 1)**: No dependencies — start immediately
+- **Foundational (Phase 2)**: Depends on Phase 1 — blocks all user story phases
+- **US1 (Phase 3)**: Depends on Phase 2 — can begin as soon as types + Playwright verified
+- **US2 (Phase 4)**: Depends on Phase 3 (`fillForm` skeleton must exist)
+- **US3 (Phase 5)**: Depends on Phase 4 (`FillResult` must be complete)
+- **Polish (Phase 6)**: Depends on Phase 5
+
+### User Story Dependencies
+
+- **US1 (P1)**: Unblocked after Phase 2 — no dependencies on other stories
+- **US2 (P1)**: Depends on US1 completion — needs `fillForm` skeleton and `FillResult` type
+- **US3 (P1)**: Depends on US2 completion — needs complete `FillResult` with questions
+
+### Parallel Opportunities
+
+- T002 can run in parallel with T001
+- T006 (requiredChecker tests) and T007 (fieldDetector impl) can run in parallel after T005
+- T008 (fieldDetector tests) can run in parallel with T009 (fillRequiredFields impl) after T007
+- T012 (questionCollector tests) and T013 (scrapeJobDescription) can run in parallel after T011
+- T018 and T019 can run in parallel
+
+---
+
+## Parallel Example: User Story 1
 
 ```bash
-# Phase 2:
-T003 greenhouse.ts skeleton
-T004 isOpenEndedQuestion helper   (same file, but pure function — no DOM deps)
-T005 extractJobDescription helper (same file, pure scraping logic)
-
-# Phase 3 + 4 unit tests:
-T006 greenhouse.test.ts (US1 tests)
-T009 greenhouse.test.ts (US2 tests — extend same file after T006)
+# After T005 is complete, launch in parallel:
+Task T006: "Unit tests for requiredChecker in tests/unit/requiredChecker.test.ts"
+Task T007: "Implement detectField in src/greenhouse/fieldDetector.ts"
 ```
+
+---
+
+## Implementation Strategy
+
+### MVP (all three US are P1 — sequential end-to-end flow)
+
+All three user stories are P1 and form a single end-to-end flow; none delivers
+standalone value without the others. Complete in priority order:
+
+1. Complete Phase 1 + Phase 2: Setup and types
+2. Complete Phase 3 (US1): Required field filling
+3. Complete Phase 4 (US2): Question collection
+4. Complete Phase 5 (US3): Review pause
+5. **VALIDATE**: Run quickstart.md against a real Greenhouse URL
+6. Complete Phase 6: Polish
 
 ---
 
 ## Notes
 
-- Playwright browser launch happens inside `fillForm` — each job gets its own browser instance
-- `processJob` stub in `index.ts` is replaced in T014; spec 003 answer injection is stubbed until that spec is implemented
-- Integration testing against a real Greenhouse URL is manual (quickstart) — no automated E2E in v1
+- [P] tasks = different files, no blocking dependencies within the phase
+- All story tasks map to spec.md user stories for full traceability
+- Constitution Principle V is enforced at T015 — no submit path exists in the codebase
+- Tests in Phase 3/4 use `page.setContent()` with mock HTML — no live browser needed

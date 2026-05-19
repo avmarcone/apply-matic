@@ -6,8 +6,9 @@
 ## `fillForm(job, profile)`
 
 Opens a Greenhouse application URL in a headed Chromium browser, fills all detectable
-standard fields from the user's profile, collects open-ended questions, and returns
-the live page alongside results. The browser stays open for human review.
+**required** standard fields from the user's profile, collects open-ended questions,
+and returns the live page alongside results. Optional fields are left untouched. The
+browser stays open for human review.
 
 ### Signature
 
@@ -35,9 +36,12 @@ fillForm(job: Job, profile: Profile): Promise<FillResult>
 
 1. Launches a headed Chromium browser via Playwright
 2. Navigates to `job.url` and waits for the form to load
-3. Fills each standard field using selector-first, label-fallback strategy
-4. Uploads resume via `setInputFiles`
-5. Scans for unfilled textareas → collects as `OpenEndedQuestion[]`
+3. For each required standard field, applies the 5-strategy detection cascade:
+   name attribute → aria-label → label text → placeholder → Greenhouse CSS selectors.
+   Optional fields (LinkedIn, cover letter, website, etc.) are skipped entirely.
+4. Fills detected required fields from `profile`; uploads resume via `setInputFiles`
+5. Scans for unfilled textareas whose labels do not match standard field patterns →
+   collects as `OpenEndedQuestion[]`
 6. Extracts job description text from the page
 7. Returns `FillResult` with the page still open
 

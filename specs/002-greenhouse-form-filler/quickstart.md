@@ -21,13 +21,14 @@ https://boards.greenhouse.io/example/jobs/123,Example Corp,Senior Engineer,pendi
 npm run dev
 ```
 
-## Step 3: Verify standard fields
+## Step 3: Verify required field filling
 
 - [ ] Browser window opens and navigates to the Greenhouse URL
 - [ ] First name, last name, email, phone are filled from profile.json
 - [ ] Resume is uploaded (file input shows the filename)
-- [ ] LinkedIn URL is filled if the field is present
-- [ ] Any field not found on the page is silently skipped (no crash)
+- [ ] Optional fields (LinkedIn, cover letter, website) are left blank
+- [ ] Any required field not found after all 5 detection strategies are tried is
+      listed in the terminal as undetectable (no crash, job marked `review-needed`)
 
 ## Step 4: Verify open-ended question detection
 
