@@ -8,31 +8,33 @@
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 — Automatically fill standard Greenhouse fields from profile (Priority: P1)
+### User Story 1 — Automatically fill required Greenhouse fields from profile (Priority: P1)
 
 Given a Greenhouse job application URL, the tool opens the page in a browser and
-automatically fills all standard fields — name, email, phone, LinkedIn URL, work
-authorization, years of experience, education, and resume upload — using values from
-the user's `profile.json`. The user does not need to touch the keyboard or mouse
-during this phase.
+automatically fills all **required** standard fields — first name, last name, email,
+phone, resume upload, and any other field the form marks as required — using values
+from the user's `profile.json`. Optional fields are left untouched. The user does not
+need to touch the keyboard or mouse during this phase.
 
-**Why this priority**: Filling standard fields is the primary time-saving value of the
+**Why this priority**: Filling required fields is the primary time-saving value of the
 tool. It eliminates the repetitive data entry that makes bulk applying tedious.
 
 **Independent Test**: Point the tool at a Greenhouse job URL with a valid `profile.json`.
-Confirm all standard fields are populated correctly without any manual input. Verify
-against 2–3 different Greenhouse job postings to confirm field detection is reliable.
+Confirm all required fields are populated correctly without any manual input, and that
+optional fields are left blank. Verify against 2–3 different Greenhouse job postings
+to confirm field detection is reliable across varying form layouts.
 
 **Acceptance Scenarios**:
 
-1. **Given** a Greenhouse job posting with all standard fields present,
+1. **Given** a Greenhouse job posting with required fields present (e.g., first name,
+   last name, email, phone, resume),
    **When** the form filler runs,
-   **Then** name, email, phone, LinkedIn URL, work authorization, years of experience,
-   education, and resume are all populated from `profile.json` without errors.
+   **Then** every required field is populated from `profile.json` without errors, and
+   optional fields are left untouched.
 
-2. **Given** a Greenhouse posting where some optional fields are absent,
+2. **Given** a Greenhouse posting where optional fields exist alongside required ones,
    **When** the form filler runs,
-   **Then** only present fields are filled; missing fields are skipped without error.
+   **Then** only required fields are filled; optional fields are skipped without error.
 
 3. **Given** a field the tool cannot confidently map,
    **When** the form filler encounters it,
@@ -112,19 +114,27 @@ explicit terminal confirmation before updating `jobs.csv`.
 ### Functional Requirements
 
 - **FR-001**: The tool MUST open the provided job URL in a Chromium browser session.
-- **FR-002**: The tool MUST detect and fill standard Greenhouse fields: name, email,
-  phone, LinkedIn URL, work authorization, years of experience, education, and resume.
-- **FR-003**: The tool MUST map each standard field to the corresponding value in
-  `profile.json`.
-- **FR-004**: The tool MUST detect open-ended free-text questions and pass them — with
+- **FR-002**: The tool MUST detect and fill only **required** standard Greenhouse
+  fields — first name, last name, email, phone, and resume upload. Required status is
+  determined by the HTML `required` attribute, a visible asterisk in the field label,
+  or Greenhouse-standard required indicators. Optional fields MUST NOT be touched.
+- **FR-003**: The tool MUST use multiple field-detection strategies in order:
+  (1) exact `name` attribute match, (2) `aria-label` or `aria-labelledby` match,
+  (3) associated `<label>` text match, (4) `placeholder` text match,
+  (5) Greenhouse-specific CSS selectors (e.g., `[data-provides]`, `[class*="field"]`).
+  All strategies must be attempted before declaring a field undetectable.
+- **FR-004**: The tool MUST map each required standard field to the corresponding value
+  in `profile.json`.
+- **FR-005**: The tool MUST detect open-ended free-text questions and pass them — with
   job context — to the answer generator rather than leaving them blank.
-- **FR-005**: The tool MUST pause after filling all fields and wait for explicit user
+- **FR-006**: The tool MUST pause after filling all fields and wait for explicit user
   confirmation before any further action.
-- **FR-006**: The tool MUST NOT click the submit button automatically under any
+- **FR-007**: The tool MUST NOT click the submit button automatically under any
   circumstance.
-- **FR-007**: The tool MUST handle missing optional fields gracefully (skip, no error).
-- **FR-008**: If a page fails to load or a required field cannot be found, the tool
-  MUST surface a clear error and mark the job `review-needed` rather than crashing.
+- **FR-008**: The tool MUST handle absent optional fields gracefully (skip, no error).
+- **FR-009**: If a page fails to load or a required field cannot be found after all
+  detection strategies are exhausted, the tool MUST surface a clear error and mark the
+  job `review-needed` rather than crashing.
 
 ### Key Entities
 
@@ -137,8 +147,9 @@ explicit terminal confirmation before updating `jobs.csv`.
 
 ## Success Criteria *(mandatory)*
 
-- **SC-001**: Standard fields are filled correctly on at least 3 distinct Greenhouse
-  job postings without manual intervention.
+- **SC-001**: All required standard fields (first name, last name, email, phone, resume)
+  are filled correctly on at least 3 distinct Greenhouse job postings without manual
+  intervention, and no optional fields are touched.
 - **SC-002**: Open-ended questions are identified and surfaced with 100% recall — no
   question is silently skipped.
 - **SC-003**: The browser is never auto-submitted; the tool always pauses and waits

@@ -32,3 +32,8 @@
 ## Notes
 
 All checklist items pass. Spec is ready for `/speckit-plan`.
+
+**2026-05-19 revision**: Narrowed AI invocation scope to narrative open-ended textbox
+questions only (FR-001). Added demographic question detection and exclusion (FR-002,
+SC-006). Added Ollama support for lower environments (FR-007, FR-008, SC-007, User
+Story 3). All items re-validated — spec remains ready.

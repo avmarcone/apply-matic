@@ -32,3 +32,7 @@
 ## Notes
 
 All checklist items pass. Spec is ready for `/speckit-plan`.
+
+**2026-05-19 revision**: Updated to restrict auto-fill to required fields only (FR-002)
+and add multi-strategy field detection requirement (FR-003, renumbered). SC-001 updated
+to reflect required-only constraint. All items re-validated — spec remains ready.

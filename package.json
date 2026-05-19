@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "ts-node src/index.ts",
+    "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run",
     "coverage": "vitest run --coverage"
@@ -36,6 +36,7 @@
     "@types/node": "^25.9.0",
     "@vitest/coverage-v8": "^4.1.6",
     "ts-node": "^10.9.2",
+    "tsx": "^4.22.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.6"
   }
