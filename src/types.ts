@@ -50,3 +50,18 @@ export interface FillResult {
   skippedFields: string[];
   page: import('playwright').Page;
 }
+
+/** The outcome of generating an AI answer for a single open-ended question. */
+export interface AnswerResult {
+  questionText: string;
+  answer: string;
+  fieldSelector: string;
+  error?: string;
+}
+
+/** Returned by injectAnswers after processing all open-ended questions. */
+export interface InjectionSummary {
+  answered: number;
+  failed: number;
+  results: AnswerResult[];
+}

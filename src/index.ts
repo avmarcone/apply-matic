@@ -3,6 +3,7 @@ import readline from 'readline';
 import { loadProfile } from './profile.js';
 import { readQueue, writeQueue, filterPending } from './queue.js';
 import { fillForm, closeBrowser } from './greenhouse.js';
+import { injectAnswers } from './answer.js';
 import type { Job, Profile, RunResult } from './types.js';
 
 const JOBS_PATH = './jobs.csv';
@@ -40,9 +41,8 @@ async function promptReview(job: Job): Promise<'applied' | 'review-needed'> {
 }
 
 /**
- * Processes a single job: fills the Greenhouse form, injects AI answers for
- * open-ended questions (stub until spec 003), prompts for human review, then
- * closes the browser.
+ * Processes a single job: fills the Greenhouse form, generates and injects AI
+ * answers for open-ended questions, prompts for human review, then closes the browser.
  *
  * @param job - The pending job to process.
  * @param profile - The user's validated profile.
@@ -59,8 +59,8 @@ async function processJob(job: Job, profile: Profile): Promise<RunResult> {
 
   if (fillResult.openEndedQuestions.length > 0) {
     console.log(`  Answering ${fillResult.openEndedQuestions.length} open-ended question(s)...`);
-    // TODO: spec 003 — call answer generator and inject answers into fillResult.page
-    console.log(`  [stub] Answer generation not yet implemented — see spec 003`);
+    const summary = await injectAnswers(fillResult.page, fillResult.openEndedQuestions, profile.resumeText);
+    console.log(`  Answered: ${summary.answered} | Failed: ${summary.failed}`);
   }
 
   const outcome = await promptReview(job);
