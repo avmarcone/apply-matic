@@ -28,3 +28,25 @@ export interface RunResult {
   outcome: 'applied' | 'review-needed' | 'error';
   error?: string;
 }
+
+/** Contextual information about a job, passed to the answer generator. */
+export interface JobContext {
+  company: string;
+  role: string;
+  jobDescription: string;
+}
+
+/** A free-text question on a Greenhouse form that requires an AI-generated answer. */
+export interface OpenEndedQuestion {
+  questionText: string;
+  fieldSelector: string;
+  context: JobContext;
+}
+
+/** The result returned by fillForm after processing a Greenhouse application page. */
+export interface FillResult {
+  openEndedQuestions: OpenEndedQuestion[];
+  filledFields: string[];
+  skippedFields: string[];
+  page: import('playwright').Page;
+}

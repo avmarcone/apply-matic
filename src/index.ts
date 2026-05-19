@@ -2,6 +2,7 @@ import 'dotenv/config';
 import readline from 'readline';
 import { loadProfile } from './profile.js';
 import { readQueue, writeQueue, filterPending } from './queue.js';
+import { fillForm, closeBrowser } from './greenhouse.js';
 import type { Job, Profile, RunResult } from './types.js';
 
 const JOBS_PATH = './jobs.csv';
@@ -39,18 +40,31 @@ async function promptReview(job: Job): Promise<'applied' | 'review-needed'> {
 }
 
 /**
- * Processes a single job by delegating to the form filler and prompting for review.
- * This is a stub — the real form filling is implemented in greenhouse.ts (spec 002).
+ * Processes a single job: fills the Greenhouse form, injects AI answers for
+ * open-ended questions (stub until spec 003), prompts for human review, then
+ * closes the browser.
  *
  * @param job - The pending job to process.
- * @param _profile - The user's profile (passed to the form filler in spec 002).
+ * @param profile - The user's validated profile.
  * @returns A RunResult indicating the final outcome.
  */
-async function processJob(job: Job, _profile: Profile): Promise<RunResult> {
+async function processJob(job: Job, profile: Profile): Promise<RunResult> {
   console.log(`  Opening application...`);
-  console.log(`  [stub] Form filling not yet implemented — see spec 002`);
+  const fillResult = await fillForm(job, profile);
+
+  console.log(`  Filled: ${fillResult.filledFields.join(', ')}`);
+  if (fillResult.skippedFields.length > 0) {
+    console.log(`  Skipped (not found): ${fillResult.skippedFields.join(', ')}`);
+  }
+
+  if (fillResult.openEndedQuestions.length > 0) {
+    console.log(`  Answering ${fillResult.openEndedQuestions.length} open-ended question(s)...`);
+    // TODO: spec 003 — call answer generator and inject answers into fillResult.page
+    console.log(`  [stub] Answer generation not yet implemented — see spec 003`);
+  }
 
   const outcome = await promptReview(job);
+  await closeBrowser(fillResult.page);
   return { job, outcome };
 }
 
